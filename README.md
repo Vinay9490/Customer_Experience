@@ -30,3 +30,5 @@ PetFood-Analysis/
   ```r
   petfood$DATE <- as.Date(petfood$DATE, format = "%Y-%m-%d")
   petfood$ZIP_CODE <- as.character(petfood$ZIP_CODE)
+  petfood$Sales <- petfood$UNITS * petfood$PRICE
+petfood$DISCOUNT <- petfood$BASE_SALES - petfood$TOTAL_SALES
