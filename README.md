@@ -61,3 +61,39 @@ R (version 4.0+ recommended)
 RStudio (recommended)
 
 Required packages:
+install.packages(c("ggplot2", "dplyr", "forecast", "knitr"))
+Running the Analysis
+Clone the repository:
+git clone https://github.com/yourusername/PetFood-Analysis.git
+Place your dataset in the data/ folder
+
+Open Petfood_analysis.Rmd in RStudio
+
+Update the data path if needed
+
+Click "Knit" to run the full analysis
+
+📊 Sample Visualizations
+Food Type Distribution
+Fig 1: Wet food dominates purchases
+
+Price by Lifestage
+Fig 2: Puppy food commands premium pricing
+
+📈 Forecasting
+Implemented ARIMA model for sales prediction:
+arima_model <- auto.arima(ts_data)
+forecast_values <- forecast(arima_model, h = 24)
+plot(forecast_values)
+🤝 Contributing
+Contributions are welcome! Please:
+
+Fork the repository
+
+Create your feature branch
+
+Commit your changes
+
+Push to the branch
+
+Open a pull request
