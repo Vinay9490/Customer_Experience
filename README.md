@@ -14,6 +14,13 @@ This repository contains a comprehensive analysis of pet food retail data to und
 - Customer loyalty segmentation
 
 ## 📂 Repository Structure
+PetFood-Analysis/
+├── data/ # Contains dataset (not included in repo)
+├── scripts/
+│ └── Petfood_analysis.Rmd # Main analysis file
+├── output/ # Generated visualizations/results
+├── README.md # This file
+└── .gitignore # Specifies files to ignore
 
 ## 🔍 Analysis Highlights
 
