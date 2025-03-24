@@ -1,0 +1,755 @@
+---
+title: "Pet Food Analysis"
+output: html_document
+date: "2023-10-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+Define the Question
+How loyal are Mars shoppers? Which Mars products and brands have the most or least loyal shoppers? Which non-
+Mars products and brands attract previously loyal Mars shoppers?.
+
+Let's load the data
+
+```{r cars}
+setwd("C:/Users/Vinay/Downloads")
+getwd()
+petfood <- read.csv("C:/Users/Vinay/Downloads/petfood_retail_table.csv")
+head(petfood)
+```
+Properties of the dataset
+```{r}
+sapply(petfood,class)
+```
+Changing the date to the correct type
+```{r}
+petfood$DATE <- as.Date(petfood$DATE, format = "%Y-%m-%d")
+#checking if the change has been implemented
+sapply(petfood,class)
+```
+```{r}
+str(petfood)
+```
+The dataset has 8890 observations and 21 variables. 
+*Data Cleaning*
+Let's look for duplicated values
+```{r}
+duplicated_rows <- petfood[duplicated(petfood), ]
+duplicated_rows
+```
+
+Checking for null values
+```{r}
+# Count NA values in each column of the petfood data frame
+na_counts <- colSums(is.na(petfood))
+
+# Display the counts
+na_counts
+```
+No null values exist in the dataset.
+
+
+UNIVARIATE ANALYSIS
+First, let's get a general feel of the data
+```{r}
+summary(petfood)
+```
+Let's convert zipcode to character
+```{r}
+# Convert the ZipCode column to character type
+petfood$ZIP_CODE <- as.character(petfood$ZIP_CODE)
+
+```
+Let's check the mode for the different numeric variables
+```{r}
+# Custom function to get mode
+getmode <- function(v){
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v,uniqv)))]
+}
+```
+
+```{r}
+price.mode <- getmode(petfood$PRICE)
+price.mode
+```
+```{r}
+units.mode <- getmode(petfood$UNITS)
+units.mode
+```
+```{r}
+base_price.mode <- getmode(petfood$BASE_PRICE)
+base_price.mode
+```
+
+From the analysis above we can draw these conclusions:
+The mean and medians of the price, units and base price are different and thus the distribution is not normal. 
+
+
+Measures of dispersion
+```{r}
+# Check price variance
+price_var <- var(petfood$PRICE)
+price_var
+```
+```{r}
+# Check base price variance
+baseprice_var <- var(petfood$BASE_PRICE)
+baseprice_var
+```
+```{r}
+# Check units variance
+units_var <- var(petfood$UNITS)
+units_var
+```
+There seem to be huge deviations from the mean for price and base price but the units don't seem to change much from the mean. 
+Let's do some basic histograms
+```{r}
+units <- petfood$UNITS
+hist(units, col = c("red"))
+```
+The data is skewed to the right. 
+```{r}
+base_price <- petfood$BASE_PRICE
+hist(base_price, col = c("blue"))
+```
+The data is skewed to the right.
+```{r}
+price <- petfood$PRICE
+hist(price, col = c("green"))
+```
+Data is skewed to the right.
+
+
+Let's check for distribution of the type of food 
+```{r}
+library(ggplot2)
+
+```
+
+```{r}
+# Create a bar plot using ggplot2
+ggplot(data = petfood, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Food Type Count", x = "Food Type", y = "Count")
+
+```
+More people buy the wet foods as opposed to the dry foods. 
+```{r}
+ggplot(data = petfood, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Count of Price_Tier", x = "Price_Tier", y = "Count")
+```
+Premium is the most popular type of food type.
+
+```{r}
+ggplot(data = petfood, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Count of Species", x = "Species", y = "Count")
+```
+It seems that more people buy cat food than dog food.
+
+
+```{r}
+ggplot(data = petfood, aes(x = NATURAL_CLAIM)) +
+  geom_bar() +
+  labs(title = "Natural Claim Count", x = "Natural Claim", y = "Count")
+```
+Non natural is more popular than natural pet food.
+
+
+```{r}
+petfood$Abbreviated_Texture <- abbreviate(petfood$TEXTURE_FORMAT, minlength = 4)  # Adjust minlength as needed
+
+ggplot(data = petfood, aes(x = Abbreviated_Texture)) +
+  geom_bar() +
+  labs(title = "Count of Texture Format", x = "Texture Format", y = "Count")
+
+```
+Loaf and CID seem to be the most popular textures.
+
+
+```{r}
+ggplot(data = petfood, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Count Of Lifestage", x = "LifeStage", y = "Count")
+```
+For the duration covered by the data, majority of the customers bought food for adult pets. 
+
+BIVARIATE ANALYSIS
+```{r}
+ggplot(data = petfood, aes(x = LIFESTAGE, y = PRICE)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Price by Lifestage", x = "Lifestage", y = "Price")
+
+```
+These results indicate that food sold for the puppy lifestage are on average more expensive
+while the all life stages food are the least expensive.
+
+```{r}
+ggplot(data = petfood, aes(x = PRICE_TIER, y = PRICE)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Price by Price Tier", x = "Price Tier", y = "Price")
+
+
+```
+The data indicates that that ultra-premium tier has the largest variablity in terms of price compared to
+hyper premium whose prices are closely stacked.The premium tier has the most outliers in terms of product
+prices.
+
+```{r}
+library(dplyr)
+```
+
+
+```{r}
+ggplot(petfood, aes(x = SPECIES, fill = LIFESTAGE)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Lifestage Distribution by Species", x = "SPECIES", y = "Count")
+
+```
+Pet foods or adult cats and dogs seem to be the most popular.Interestingly, customers are more
+likely to buy pet food that serves all life stages for their cats compared to dogs.
+
+```{r}
+ggplot(petfood, aes(x = SPECIES, fill = FOOD_TYPE)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Food Type Distribution by Species", x = "SPECIES", y = "Count")
+```
+Wet food seems to be significantly more popular for customers owning cats compared to those
+with dogs. 
+
+```{r}
+ggplot(petfood, aes(x = SPECIES, fill = PRICE_TIER)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Price Tier Distribution by Species", x = "SPECIES", y = "Count")
+```
+Premium food type seems to be the most popular for both species. It is also notable that customers
+are more willing to buy super premium pet food for their cats than for their dogs.
+
+
+```{r}
+ggplot(petfood, aes(x = SPECIES, fill = NATURAL_CLAIM)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Natural Claim Distribution by Species", x = "Natural Claim", y = "Count")
+```
+Non natural is the most popular across both species
+
+
+Let's look at correlation
+```{r}
+correlation <- cor(petfood$PRICE, petfood$BASE_PRICE)
+correlation
+
+```
+There is a very strong positive relationship between the price and the base price. 
+```{r}
+correlation <- cor(petfood$UNITS, petfood$BASE_PRICE)
+correlation
+```
+There is a weak negative relationship between base price and units sold hence an increase
+in base price results to a decrease in units sold.
+
+
+Sales Over Time
+```{r}
+# Calculate sales for each transaction or time period
+petfood$Sales <- petfood$UNITS * petfood$PRICE
+
+# Calculate total sales over time (e.g., sum of sales by month)
+```
+
+
+
+```{r}
+# Check the class of a variable (e.g., 'my_date_variable')
+class(petfood$DATE)
+
+```
+```{r}
+# Assuming "DATE" is in the "YYYY-MM-DD" format, reformat it to "dd/yy/mm"
+petfood$FormattedDate <- format(as.Date(petfood$DATE), "%d/%Y/%m")
+petfood
+```
+
+
+```{r}
+total_sales <- aggregate(Sales ~ DATE, data = petfood, sum)
+```
+```{r}
+head(petfood)
+```
+```{r}
+# Specify the date format while importing
+petfood <- read.csv("C:/Users/Marvin/Downloads/petfood_retail_table.csv", stringsAsFactors = FALSE)
+petfood$DATE <- as.Date(petfood$DATE, format = "%Y-%m-%d")
+
+```
+```{r}
+head(petfood)
+```
+
+```{r}
+# Calculate sales for each transaction or time period
+petfood$Sales <- petfood$UNITS * petfood$PRICE
+total_sales <- aggregate(Sales ~ DATE, data = petfood, sum)
+total_sales
+```
+```{r}
+# Find the row with maximum sales
+max_sales_row <- total_sales[which.max(total_sales$Sales), ]
+max_sales_row
+```
+
+
+```{r}
+
+# Extract the date with maximum sales
+date_with_max_sales <- max_sales_row$DATE
+date_with_max_sales
+```
+```{r}
+# Extract month and year from the DATE column
+total_sales$MonthYear <- format(total_sales$DATE, "%Y-%m")
+
+# Calculate total sales for each month-year combination
+monthly_sales <- aggregate(Sales ~ MonthYear, data = total_sales, sum)
+monthly_sales
+```
+```{r}
+# Display the first few rows of the total_sales data frame
+head(total_sales)
+
+```
+```{r}
+# Extract the month from the DATE column
+total_sales$Month <- substr(total_sales$DATE, 6, 7)
+total_sales
+```
+```{r}
+# Find the row with maximum sales
+max_sales_row <- total_sales[which.max(total_sales$Sales), ]
+
+# Extract the month with maximum sales
+month_with_max_sales <- max_sales_row$Month
+month_with_max_sales
+```
+March was the month with least sales.
+```{r}
+# Find the row with maximum sales
+min_sales_row <- total_sales[which.min(total_sales$Sales), ]
+
+# Extract the month with maximum sales
+month_with_min_sales <- min_sales_row$Month
+month_with_min_sales
+
+```
+July was the month with least sales.
+
+```{r}
+
+# Create a new column "TOTAL SALES" by multiplying "QUANTITY" and "PRICE"
+petfood$`TOTAL SALES` <- petfood$UNITS * petfood$PRICE
+# Create a new column "base sales
+petfood$'BASE SALES' <- petfood$UNITS * petfood$BASE_PRICE
+#get the difference to get discount
+petfood$DISCOUNT <- petfood$`TOTAL SALES` - petfood$`BASE SALES`
+# Display the first few rows of the petfood data frame
+head(petfood)
+
+
+```
+compare sales with species
+```{r}
+# Group by Species and calculate total sales per species
+species_sales <- petfood %>%
+  group_by(SPECIES) %>%
+  summarise(Total_Sales = sum(`TOTAL SALES`))
+species_sales
+```
+Cats brought in more sales than dogs
+```{r}
+# Group by Food Type and calculate total sales per type
+foodtype_sales <- petfood %>%
+  group_by(FOOD_TYPE) %>%
+  summarise(Total_Sales = sum(`TOTAL SALES`))
+foodtype_sales
+
+
+```
+Dry foods bring in more sales than wet foods. 
+```{r}
+price_tier_sales <- petfood %>%
+  group_by(PRICE_TIER) %>%
+  summarise(Total_Sales = sum(`TOTAL SALES`))
+price_tier_sales
+
+```
+Premium brings in the most sales 
+```{r}
+# Calculate the correlation matrix
+# Select the desired columns
+selected_data <- petfood[, c('TOTAL SALES', 'UNITS', 'BASE SALES')]
+
+# Calculate the correlation matrix
+correlation_matrix <- cor(selected_data)
+correlation_matrix
+
+```
+There seems to be a great positive relationship between base sales and total sales. 
+
+SALES FORECAST
+
+To forecast the sales data for year 2023 and 2024, we can use the summary for total monthly sales spanning the entire duration covered by the dataset.
+```{r}
+# Preview the monthly sales data
+head(monthly_sales)
+```
+```{r}
+# Check column data types
+
+sapply(monthly_sales,class)
+
+```
+```{r}
+# Convert year and month to date type
+
+formatted_monthly_sales <- monthly_sales
+
+# Append "-01" to each string in the 'MonthYear' column
+formatted_monthly_sales$MonthYear <- paste(formatted_monthly_sales$MonthYear, "01", sep = "-")
+
+# Convert the 'MonthYear' column to Date type
+formatted_monthly_sales$MonthYear <- as.Date(formatted_monthly_sales$MonthYear, format = "%Y-%m-%d")
+
+monthly_sales
+formatted_monthly_sales
+```
+
+
+Let's proceed to do some forecasting. For this case we will implement the ARIMA forecasting model
+
+
+First import the forecast library to utilize the arima model+
+```{r}
+install.packages("forecast")
+
+library(forecast)
+```
+
+
+```{r}
+# Assuming you have a time series object 'ts_data'
+plot(formatted_monthly_sales, xlab = "MonthYear", ylab = "Sales", main = "Monthly Sales")
+lines(formatted_monthly_sales, col = "blue", lwd = 2)
+```
+```{r}
+# Create a time series object
+year_start <- as.numeric(format(min(formatted_monthly_sales$MonthYear), "%Y"))
+
+# Create a time series object
+ts_data <- ts(formatted_monthly_sales$Sales, frequency = 12, start = c(year_start, 1))
+
+# Print the time series object
+print(ts_data)
+```
+```{r}
+# Assuming you have a time series object 'ts_data' created as before
+# Fit an ARIMA model
+arima_model <- auto.arima(ts_data)
+
+# Make monthly forecasts for the next 2 years (24 months)
+forecast_values <- forecast(arima_model, h = 24)  # Forecast for the next 24 months
+
+# Print the forecasted values
+print(forecast_values)
+```
+```{r}
+# Now we forecast sales for upcoming months
+plot(forecast_values, main = "Monthly Sales Forecast", xlab = "Time", ylab = "Sales")
+```
+
+
+```{r}
+library(dplyr)
+
+grouped_data <- petfood %>%
+  group_by(SHOPPER_ID) %>%
+  summarise(UniqueDates = n_distinct(DATE))
+
+grouped_data
+```
+
+There are 343 unique customers in the dataset. To identify loyal customers, we can find customers with the multiple visits to the store (repeat customers).To ensure we are capturing the correct information, the data is grouped by shopper ID and the unique dates are selected to find repeat customers. The assumption is that any shopper visits a store at most once per day.
+
+```{r}
+# Find the maximum and minimum dates
+max_date <- max(petfood$DATE)
+min_date <- min(petfood$DATE)
+
+# Print the results
+cat("Maximum Date:", max_date, "\n")
+cat("Minimum Date:", min_date, "\n")
+```
+
+The dataset ranges between 2019-07-01 to 2022-12-31. A customer can be considered loyal if they make at least 6 trips a year to the store. This means that a shopper should make at least 10 trips to a store if we are to consider them as loyal.
+
+```{r}
+repeat_customers <- grouped_data %>%
+  filter(UniqueDates > 15)
+
+repeat_customers
+```
+
+```{r}
+# Create a vector of unique shopper IDs
+unique_shopper_ids <- repeat_customers$SHOPPER_ID  # Replace with your actual list of unique shopper IDs
+
+# Create a table with rows matching the unique shopper IDs
+loyal_customers <- petfood %>%
+  filter(SHOPPER_ID %in% unique_shopper_ids)
+
+# Create a table with rows not matching the unique shopper IDs
+other_customers <- petfood %>%
+  filter(!SHOPPER_ID %in% unique_shopper_ids)
+
+print(dim(loyal_customers))
+print(dim(other_customers))
+
+```
+```{r}
+dim(grouped_data)
+```
+Out of 343 unique shopper IDs in the dataset, 50 of these an be classified as loyal customers since they return more than 15 times over the specified period.
+
+
+
+CUSTOMER LOYALTY ANALYSIS
+
+What do the most loyal shoppers buy?
+First we compare the food types
+```{r}
+# Create a bar plot using ggplot2 for loyal customers
+ggplot(data = loyal_customers, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal Food Type Count", x = "Food Type", y = "Count")
+
+
+ggplot(data = other_customers, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Others Food Type Count", x = "Food Type", y = "Count")
+
+```
+
+There is  not much difference in terms of food bought by loyal customers compared to others since both customers buy more of "WET" food type. 
+
+
+```{r}
+# loyal customers
+loyal_price_tier_sales <- loyal_customers %>%
+  group_by(PRICE_TIER) %>%
+  summarise(Total_Sales = sum(`TOTAL SALES`))
+print(sum(loyal_price_tier_sales$Total_Sales))
+
+
+# other customers
+other_price_tier_sales <- other_customers %>%
+  group_by(PRICE_TIER) %>%
+  summarise(Total_Sales = sum(`TOTAL SALES`))
+print(sum(other_price_tier_sales$Total_Sales))
+```
+This results indicate that loyal customers have significantly greater value to the company
+compared to the other customers in a ratio of 3:1.
+
+
+Now we compare customer brand switching behavior. To achieve this, we need to split the datset into multiple subsets based on the date column.
+```{r}
+# Define the date range
+end_date <- as.Date("2020-01-01")
+
+loyal_1 <- subset(loyal_customers, DATE < end_date)
+other_customers_1 <- subset(loyal_customers, DATE < end_date)
+
+start_date <- as.Date("2020-01-01")
+end_date <- as.Date("2020-07-01")
+
+loyal_2 <- subset(loyal_customers, DATE >= start_date & DATE < end_date)
+other_customers_2 <- subset(other_customers, DATE >= start_date & DATE < end_date)
+
+start_date <- as.Date("2020-07-01")
+end_date <- as.Date("2021-01-01")
+
+loyal_3 <- subset(loyal_customers, DATE >= start_date & DATE < end_date)
+other_customers_3 <- subset(other_customers, DATE >= start_date & DATE < end_date)
+
+start_date <- as.Date("2021-01-01")
+end_date <- as.Date("2021-07-01")
+
+loyal_4 <- subset(loyal_customers, DATE >= start_date & DATE < end_date)
+other_customers_4 <- subset(other_customers, DATE >= start_date & DATE < end_date)
+
+start_date <- as.Date("2021-07-01")
+end_date <- as.Date("2022-01-01")
+
+loyal_5 <- subset(loyal_customers, DATE >= start_date & DATE < end_date)
+other_customers_5 <- subset(other_customers, DATE >= start_date & DATE < end_date)
+
+start_date <- as.Date("2022-01-01")
+end_date <- as.Date("2022-07-01")
+
+loyal_6 <- subset(loyal_customers, DATE >= start_date & DATE < end_date)
+other_customers_6 <- subset(other_customers, DATE >= start_date & DATE < end_date)
+```
+
+
+```{r}
+dim(loyal_1)
+dim(loyal_2)
+dim(loyal_3)
+dim(loyal_4)
+dim(loyal_5)
+dim(loyal_6)
+```
+
+Having confirmed that the data was successfully split, we can compare consumer behavior across the different time periods.
+```{r}
+# Create a bar plot using ggplot2
+ggplot(data = loyal_1, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal 1 Food Type Count", x = "Food Type", y = "Count")
+
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_2, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal 2 Food Type Count", x = "Food Type", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_3, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal 3 Food Type Count", x = "Food Type", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_4, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal 4 Food Type Count", x = "Food Type", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_5, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal 5 Food Type Count", x = "Food Type", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_6, aes(x = FOOD_TYPE)) +
+  geom_bar() +
+  labs(title = "Loyal 6 Food Type Count", x = "Food Type", y = "Count")
+
+```
+Now we compare how price_tier impacts loyal customers over time
+
+```{r}
+# Create a bar plot using ggplot2
+ggplot(data = loyal_1, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Loyal 1 Price Tier Count", x = "Price Tier", y = "Count")
+
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_2, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Loyal 2 Price Tier Count", x = "Price Tier", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_3, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Loyal 3 Price Tier Count", x = "Price Tier", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_4, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Loyal 4 Price Tier Count", x = "Price Tier", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_5, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Loyal 5 Price Tier Count", x = "Price Tier", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_6, aes(x = PRICE_TIER)) +
+  geom_bar() +
+  labs(title = "Loyal 6 Price Tier Count", x = "Price Tier", y = "Count")
+```
+Now we can compare the life-stage of pets for products bought
+
+```{r}
+# Create a bar plot using ggplot2
+ggplot(data = loyal_1, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Loyal 1 Lifestage Count", x = "Lifestage", y = "Count")
+
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_2, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Loyal 2 Lifestage Count", x = "Lifestage", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_3, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Loyal 3 Lifestage Count", x = "Lifestage", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_4, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Loyal 4 Lifestage Count", x = "Lifestage", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_5, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Loyal 5 Lifestage Count", x = "Lifestage", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_6, aes(x = LIFESTAGE)) +
+  geom_bar() +
+  labs(title = "Loyal 6 Lifestage Count", x = "Lifestage", y = "Count")
+```
+```{r}
+# Create a bar plot using ggplot2
+ggplot(data = loyal_1, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Loyal 1 Species Count", x = "Species", y = "Count")
+
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_2, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Loyal 2 Species Count", x = "Species", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_3, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Loyal 3 Species Count", x = "Species", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_4, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Loyal 4 Species Count", x = "Species", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_5, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Loyal 5 Species Count", x = "Species", y = "Count")
+
+# Create a bar plot using ggplot2
+ggplot(data = loyal_6, aes(x = SPECIES)) +
+  geom_bar() +
+  labs(title = "Loyal 6 Species Count", x = "Species", y = "Count")
+```
+
