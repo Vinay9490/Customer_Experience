@@ -14,3 +14,12 @@ This repository contains a comprehensive analysis of pet food retail data to und
 - Customer loyalty segmentation
 
 ## 📂 Repository Structure
+
+## 🔍 Analysis Highlights
+
+### 1. Data Preparation
+- Loaded and cleaned retail transaction data (8,890 observations, 21 variables)
+- Handled data types and formats:
+  ```r
+  petfood$DATE <- as.Date(petfood$DATE, format = "%Y-%m-%d")
+  petfood$ZIP_CODE <- as.character(petfood$ZIP_CODE)
