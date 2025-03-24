@@ -16,11 +16,11 @@ This repository contains a comprehensive analysis of pet food retail data to und
 ## 📂 Repository Structure
 PetFood-Analysis/
 ├── data/ # Contains dataset (not included in repo)<br>
-├── scripts/
-│ └── Petfood_analysis.Rmd # Main analysis file
-├── output/ # Generated visualizations/results
-├── README.md # This file
-└── .gitignore # Specifies files to ignore
+├── scripts/<br>
+│ └── Petfood_analysis.Rmd # Main analysis file<br>
+├── output/ # Generated visualizations/results<br>
+├── README.md # This file<br>
+└── .gitignore # Specifies files to ignore<br>
 
 ## 🔍 Analysis Highlights
 
