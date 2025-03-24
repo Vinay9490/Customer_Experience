@@ -32,3 +32,32 @@ PetFood-Analysis/
   petfood$ZIP_CODE <- as.character(petfood$ZIP_CODE)
   petfood$Sales <- petfood$UNITS * petfood$PRICE
 petfood$DISCOUNT <- petfood$BASE_SALES - petfood$TOTAL_SALES
+2. Key Insights
+🐾 Product Preferences
+Wet food (56%) more popular than dry food (44%)
+
+Premium tier accounts for 45% of sales
+
+Cat food outsells dog food (55% vs 45%)
+
+💰 Sales Patterns
+Strong positive correlation between price and base price (r = 0.92)
+
+Negative correlation between units sold and base price (r = -0.31)
+
+Highest sales month: July | Lowest sales month: March
+
+🏆 Customer Loyalty
+Identified 50 loyal customers (15+ visits)
+
+Loyal customers generate 3x more revenue than others
+
+Loyalty patterns consistent across time periods
+
+🛠️ Installation & Usage
+Prerequisites
+R (version 4.0+ recommended)
+
+RStudio (recommended)
+
+Required packages:
